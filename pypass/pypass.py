@@ -21,7 +21,7 @@ from cryptography.fernet import Fernet
 # path = "/mnt/c/Users/jeff-/OneDrive/Documents/Code/"
 # TODO Remove path variable from functions
 # path is no longer needed
-# adding another change
+# adding another change2
 path = ""
 
 def encrypt_password(password):
