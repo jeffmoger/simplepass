@@ -1,0 +1,5 @@
+cryptography==2.6.1
+passlib==1.7.1
+pick==0.6.4
+pyperclip==1.7.0
+windows-curses==1.1
