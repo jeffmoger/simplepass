@@ -104,9 +104,8 @@ venv.bak/
 .mypy_cache/
 
 # My Stuff
-hash
-salt
-/Import
-/store
-store.json
-/stuff
+/pypass/hash
+/pypass/salt
+/pypass/Import
+/pypass/store
+/pypass/store.json
