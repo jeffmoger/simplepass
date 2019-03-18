@@ -109,3 +109,4 @@ venv.bak/
 /pypass/Import
 /pypass/store
 /pypass/store.json
+/.vscode
