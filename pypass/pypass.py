@@ -4,12 +4,12 @@ import secrets
 import datetime
 import base64
 
-import pyperclip
 import getpass
 import pickle
 import json
 import csv
-from pick import pick
+
+import pyperclip
 from passlib.hash import pbkdf2_sha256 as p_hash
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -39,7 +39,7 @@ def timestamp_id(date): # takes timestamp and creates the unique id for each pas
 
 
 def pickle_password(encrypted, timeid): # pickles the password and saves to a file
-    with open(path + 'store/' + timeid, 'wb') as f:
+    with open('store/' + timeid, 'wb') as f:
         pickle.dump(encrypted, f)
 
 
@@ -51,7 +51,7 @@ def pickle_b64(encrypted):
 
 def pickle_batch():
     count = 0
-    with open(path + 'store.json', 'r') as f:  # Opens store dictionary
+    with open('store.json', 'r') as f:  # Opens store dictionary
         store_dict = json.load(f)
     for row in store_dict['passwords']:
         unpickle(row['password'])
@@ -108,7 +108,7 @@ def create_passcard(site,username,email,password,timestamp,title,note,pid):
 
 
 def save_passcards(new_dict):
-    with open(path + 'store.json', 'r') as f:
+    with open('store.json', 'r') as f:
         store_dict = json.load(f)
     mylist = [] 
     passlist = store_dict['passwords']
@@ -122,13 +122,13 @@ def save_passcards(new_dict):
     if not saved:
         mylist.append(new_dict)
     mydict = {"passwords": mylist}
-    with open(path + 'store.json', 'w', encoding='utf-8') as f:
+    with open('store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
     print('    Record Saved')
 
 
 def save_import(import_list):
-    with open(path + 'store.json', 'r') as f:
+    with open('store.json', 'r') as f:
         store_dict = json.load(f)
     mylist = []
     passlist = store_dict['passwords']
@@ -137,7 +137,7 @@ def save_import(import_list):
     for count, s in enumerate(import_list, 1):
         mylist.append(s)
     mydict = {"passwords": mylist}
-    with open(path + 'store.json', 'w', encoding='utf-8') as f:
+    with open('store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
     print('    Complete. %d records imported.' % count)
 
@@ -228,7 +228,7 @@ def unencrypt(encrypted, key):
 
 def browse(site, key):
     browse.index = ""
-    with open(path + 'store.json', 'r') as f:  # Opens store dictionary
+    with open('store.json', 'r') as f:  # Opens store dictionary
         store_dict = json.load(f)
         site_list = []
         passcard_list = []
@@ -336,18 +336,18 @@ def browse(site, key):
             save_passcards(create_passcard.new_dict)
         elif x.startswith('D'):
             y = int(x.lstrip('D')) - 1
-            with open(path + 'store.json', 'r') as f:
+            with open('store.json', 'r') as f:
                 store_dict = json.load(f)
             mylist = []
             passlist = store_dict['passwords']
             for s in passlist:
                 if s['pid'] == site_list[y][8]:
-                    if os.path.exists(path + 'store/' + site_list[y][8]):
-                        os.remove(path + 'store/' + site_list[y][8])
+                    if os.path.exists('store/' + site_list[y][8]):
+                        os.remove('store/' + site_list[y][8])
                 else:
                     mylist.append(s)
             mydict = {"passwords": mylist}
-            with open(path + 'store.json', 'w', encoding='utf-8') as f:
+            with open('store.json', 'w', encoding='utf-8') as f:
                 json.dump(mydict, f)
             print('    Record Deleted')
         else:
@@ -357,7 +357,7 @@ def browse(site, key):
 def create_master():
     master = input("    Create a Master password: ")
     hashpass = p_hash.hash(master)
-    fh = open(path + 'hash', 'w', encoding='utf-8')
+    fh = open('hash', 'w', encoding='utf-8')
     fh.write(hashpass)
     fh.close()
 
@@ -381,7 +381,7 @@ def change_master():
             key2 = base64.urlsafe_b64encode(kdf.derive(p))
             # 3. Open Passwords
             new_list = []
-            with open(path + 'store.json', 'r') as f:  # Opens store dictionary
+            with open('store.json', 'r') as f:  # Opens store dictionary
                 store_dict = json.load(f)
             
             for row in store_dict['passwords']:
@@ -397,12 +397,12 @@ def change_master():
                 row['password'] = p_b64
                 new_list.append(row)
             newdict = {"passwords": new_list}
-            with open(path + 'store.json', 'w', encoding='utf-8') as f:
+            with open('store.json', 'w', encoding='utf-8') as f:
                 json.dump(newdict, f)
 
             # 4. Save new hash
             hashpass = p_hash.hash(new_master)
-            fh = open(path + 'hash', 'w', encoding='utf-8')
+            fh = open('hash', 'w', encoding='utf-8')
             fh.write(hashpass)
             fh.close()
             master = new_master
@@ -427,13 +427,13 @@ def getkey(master):
 
 
 def openpass(site, date):
-    with open(path + 'temp.dat', 'rb') as f:
+    with open('temp.dat', 'rb') as f:
         new_data = pickle.load(f)
         print(new_data)
 
 
 def view_json():
-    with open(path + 'store.json', 'r') as f:  # Opens store dictionary
+    with open('store.json', 'r') as f:  # Opens store dictionary
         store_dict = json.load(f)
         print(json.dumps(store_dict, indent=4, sort_keys=False))
 
@@ -478,7 +478,7 @@ def setup():
         '    ************************************\n')
     create_master()
     mydict = {"passwords": []}
-    with open(path + 'store.json', 'w', encoding='utf-8') as f:
+    with open('store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
 
 ###################################################################
@@ -490,22 +490,21 @@ switch = 0
 key = ""
 tries = 3
 site = ""
-# Menu Options
-options = [
-    'Create New Password [0]',
-    'Browse Passcards [1]',
-    'Generate Random Password [2]',
-    'View JSON [3]',
-    'Import Passwords [4]',
-    'Change Master Password [5]',
-    'Quit [6]'
-]
 
+menu_items = {
+    '1': 'Create New Password',
+    '2': 'Browse Passcards',
+    '3': 'Generate Random Password',
+    '4': 'View JSON',
+    '5': 'Import Passwords',
+    '6': 'Change Master Password',
+    '7': 'Quit'
+}
 
 while is_empty(key):
     if os.path.exists('hash'):
         master = getpass.getpass(prompt='    Password: ')
-        with open(path + 'hash', 'r', encoding='utf-8') as f:
+        with open('hash', 'r', encoding='utf-8') as f:
             saved_hash = f.read()
         if p_hash.verify(master, saved_hash):
             print("    Welcome. Login successful!")
@@ -530,12 +529,16 @@ while is_empty(key):
 
 while switch == 1:
     if index == "":
-        title = 'What would you like to do?'
-        option, index = pick(options, title)
-    if index == 99:              # Retrieve Password
-        pass
+        section_title('Menu')
+        for (k,v) in menu_items.items():
+            print('    [' + k + '] ' + v)
+        print('\n')
+        x = input('    Enter number to select: ')
+        index = int(x)-1
+
+
     elif index == 0:            # Create New Password
-        section_title(options[index])
+        section_title(menu_items['1'])
         if is_empty(site):
             site = input("    Enter site name: ")
         else:
@@ -551,7 +554,7 @@ while switch == 1:
         goback()
         index = goback.index
     elif index == 1:            # Browse Passcards
-        section_title(options[index])
+        section_title(menu_items['2'])
         site = input("    Enter site name: ")
         browse(site, getkey.key)
         if browse.index == 0:
@@ -560,7 +563,7 @@ while switch == 1:
             goback()
             index = goback.index
     elif index == 2:            # Generate Random Password
-        section_title(options[index])
+        section_title(menu_items['3'])
         length = input("    Enter number of characters. Default is 12 : ")
         if is_empty(length):
             length = 12
@@ -572,14 +575,17 @@ while switch == 1:
         goback()
         index = goback.index
     elif index == 3:            # View JSON
+        section_title(menu_items['4'])
         view_json()
         goback()
         index = goback.index
     elif index == 4:           # Import passwords
+        section_title(menu_items['5'])
         imp_csv()
         goback()
         index = goback.index
     elif index == 5:           # Change Master Password
+        section_title(menu_items['6'])
         change_master()
         goback()
         index = goback.index
