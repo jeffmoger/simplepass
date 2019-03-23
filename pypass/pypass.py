@@ -110,7 +110,7 @@ def create_passcard(site,username,email,password,timestamp,title,note,pid):
 def save_passcards(new_dict):
     with open(path + 'store.json', 'r') as f:
         store_dict = json.load(f)
-    mylist = []
+    mylist = [] 
     passlist = store_dict['passwords']
     saved = 0
     for s in passlist:
@@ -323,7 +323,6 @@ def browse(site, key):
             pickle_b64(encrypt_password.encrypted)
             pid = site_list[y][8]
             pickle_password(encrypt_password.encrypted, pid)
-            ############## Replace BELOW with save_passcard()
             create_passcard(
                 site,
                 username,
@@ -335,7 +334,6 @@ def browse(site, key):
                 pid
             )
             save_passcards(create_passcard.new_dict)
-            ############## Replace ABOVE with save_passcard()
         elif x.startswith('D'):
             y = int(x.lstrip('D')) - 1
             with open(path + 'store.json', 'r') as f:
@@ -364,9 +362,60 @@ def create_master():
     fh.close()
 
 
+def change_master():
+    while True:
+        # 1. Choose new password
+        new_master = input("    Create a new Master password: ")
+        new_master2 = input("    Enter new Master password again: ")
+        if new_master == new_master2:
+            print('    Success')
+            # 2. Create new key
+            p = new_master.encode()
+            salt = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=salt,
+                iterations=100000,
+                backend=default_backend())
+            key2 = base64.urlsafe_b64encode(kdf.derive(p))
+            # 3. Open Passwords
+            new_list = []
+            with open(path + 'store.json', 'r') as f:  # Opens store dictionary
+                store_dict = json.load(f)
+            
+            for row in store_dict['passwords']:
+                unpickle(row['password'])
+                unencrypt(unpickle.encrypted, getkey.key)
+                password = unencrypt.decrypted
+                # 3b. Encrypt with new key
+                f = Fernet(key2)
+                a = password.encode('utf-8')
+                encrypted = f.encrypt(a)
+                pickled_p = pickle.dumps(encrypted)
+                p_b64 = base64.b64encode(pickled_p).decode('ascii')
+                row['password'] = p_b64
+                new_list.append(row)
+            newdict = {"passwords": new_list}
+            with open(path + 'store.json', 'w', encoding='utf-8') as f:
+                json.dump(newdict, f)
+
+            # 4. Save new hash
+            hashpass = p_hash.hash(new_master)
+            fh = open(path + 'hash', 'w', encoding='utf-8')
+            fh.write(hashpass)
+            fh.close()
+            master = new_master
+            getkey(master)
+            print('    Master password and all passcards updated')
+            break
+        else:
+            print("    Passwords do not match. Try again.")
+
+
 def getkey(master):
     password = master.encode()
-    salt = b'salt_'
+    salt = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -416,7 +465,7 @@ def goback():
     if x == "m":
         goback.index = ""
     else:
-        goback.index = 5
+        goback.index = 6
 
 
 def initialize():
@@ -448,7 +497,8 @@ options = [
     'Generate Random Password [2]',
     'View JSON [3]',
     'Import Passwords [4]',
-    'Quit [5]'
+    'Change Master Password [5]',
+    'Quit [6]'
 ]
 
 
@@ -529,7 +579,12 @@ while switch == 1:
         imp_csv()
         goback()
         index = goback.index
-    elif index == 5:            # Quit and Exit Program
+    elif index == 5:           # Change Master Password
+        change_master()
+        goback()
+        index = goback.index
+    elif index == 6:            # Quit and Exit Program
         print("    Thanks for playing. Goodbye!\n")
         break
+
 
