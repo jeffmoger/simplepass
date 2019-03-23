@@ -239,7 +239,7 @@ def browse(site, key):
             unencrypt(unpickle.encrypted, getkey.key)
             password = unencrypt.decrypted
             str_card = '\n' \
-                '    countID  : ' + str(countid) + '\n' \
+                '    countID  : [' + str(countid) + ']\n' \
                 '    title    : ' + row['title'] + '\n' \
                 '    site     : ' + row['site'] + '\n' \
                 '    username : ' + row['username'] + '\n' \
