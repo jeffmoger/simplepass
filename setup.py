@@ -6,8 +6,8 @@ with open("README.md", "r") as fh:
 requirements = ["pyperclip", "passlib", "cryptography"]
 
 setup(
-    name="pypass",
-    version="1.0.2",
+    name="SimplePass",
+    version="1.0.3",
     author="Example Author",
     author_email="jeff@moger.com",
     description="A simple password manager for the command line.",

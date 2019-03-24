@@ -18,7 +18,7 @@ from cryptography.fernet import Fernet
 
 
 def encrypt_password(password):
-    f = Fernet(key)
+    f = Fernet(getkey.key)
     a = password.encode('utf-8')
     encrypt_password.encrypted = f.encrypt(a)
 
@@ -52,7 +52,7 @@ def pickle_batch():
         count += 1
 
 
-def generate(length, complexity, key):
+def generate(length, complexity, key, username, site):
     generate_password(length, complexity)
     date = str(datetime.datetime.now())
     timestamp_id(date)
@@ -474,15 +474,9 @@ def setup():
     with open('store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
 
-if __name__ == '__main__':
-
-    path = ""
+def main():
     index = ""
-    switch = 0
-    key = ""
-    tries = 3
     site = ""
-
     menu_items = {
         '1': 'Create New Password',
         '2': 'Browse Passcards',
@@ -492,7 +486,8 @@ if __name__ == '__main__':
         '6': 'Change Master Password',
         '7': 'Quit'
     }
-
+    key = ""
+    tries = 3
     while is_empty(key):
         if os.path.exists('hash'):
             master = getpass.getpass(prompt='    Password: ')
@@ -527,8 +522,6 @@ if __name__ == '__main__':
             print('\n')
             x = input('    Enter number to select: ')
             index = int(x)-1
-
-
         elif index == 0:            # Create New Password
             section_title(menu_items['1'])
             if is_empty(site):
@@ -541,7 +534,7 @@ if __name__ == '__main__':
                 length = 12
             complexity = input("    Include special characters?(N/y): ")
             username = input("    Enter username: ")
-            generate(int(length), complexity, key)
+            generate(int(length), complexity, getkey.key, username, site)
             print("    Done!  %s saved to clipboard." % (generate_password.password))
             goback()
             index = goback.index
@@ -584,6 +577,13 @@ if __name__ == '__main__':
         elif index == 6:            # Quit and Exit Program
             print("    Thanks for playing. Goodbye!\n")
             break
+        else:
+            print("    [%s] not a valid option!\n" % x)
+            x = input('    Try again? ')
+            if x.isdigit():
+                index = int(x)-1
+            else:
+                index = ""
 
-
-
+if __name__ == '__main__':
+    main()
