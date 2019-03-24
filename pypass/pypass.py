@@ -474,7 +474,7 @@ def initialize():
 
 def setup():
     print('    ************************************\n' +
-        '    Welcome to Moger\'s Password Manager\n' +
+        '    Welcome to SimplePass Password Manager\n' +
         '    ************************************\n')
     create_master()
     mydict = {"passwords": []}
@@ -485,112 +485,114 @@ def setup():
 # Begin
 ###################################################################
 
-index = ""
-switch = 0
-key = ""
-tries = 3
-site = ""
+if __name__ == '__main__':
 
-menu_items = {
-    '1': 'Create New Password',
-    '2': 'Browse Passcards',
-    '3': 'Generate Random Password',
-    '4': 'View JSON',
-    '5': 'Import Passwords',
-    '6': 'Change Master Password',
-    '7': 'Quit'
-}
+    index = ""
+    switch = 0
+    key = ""
+    tries = 3
+    site = ""
 
-while is_empty(key):
-    if os.path.exists('hash'):
-        master = getpass.getpass(prompt='    Password: ')
-        with open('hash', 'r', encoding='utf-8') as f:
-            saved_hash = f.read()
-        if p_hash.verify(master, saved_hash):
-            print("    Welcome. Login successful!")
-            getkey(master)
-            switch = 1
-            key = getkey.key
-        else:
-            tries -= 1
-            switch = 0
-            if tries > 0:
-                print("    Password failed. %d attemps left." % (tries))
-            elif tries == 0:
-                print("    Password failed. Good-bye.")
-                break
-    else:
-        setup()
+    menu_items = {
+        '1': 'Create New Password',
+        '2': 'Browse Passcards',
+        '3': 'Generate Random Password',
+        '4': 'View JSON',
+        '5': 'Import Passwords',
+        '6': 'Change Master Password',
+        '7': 'Quit'
+    }
+
+    while is_empty(key):
         if os.path.exists('hash'):
-            print('    Login to continue setup.')
+            master = getpass.getpass(prompt='    Password: ')
+            with open('hash', 'r', encoding='utf-8') as f:
+                saved_hash = f.read()
+            if p_hash.verify(master, saved_hash):
+                print("    Welcome. Login successful!")
+                getkey(master)
+                switch = 1
+                key = getkey.key
+            else:
+                tries -= 1
+                switch = 0
+                if tries > 0:
+                    print("    Password failed. %d attemps left." % (tries))
+                elif tries == 0:
+                    print("    Password failed. Good-bye.")
+                    break
         else:
-            print('    Something has gone wrong. Quitting.')
-            break
+            setup()
+            if os.path.exists('hash'):
+                print('    Login to continue setup.')
+            else:
+                print('    Something has gone wrong. Quitting.')
+                break
 
-while switch == 1:
-    if index == "":
-        section_title('Menu')
-        for (k,v) in menu_items.items():
-            print('    [' + k + '] ' + v)
-        print('\n')
-        x = input('    Enter number to select: ')
-        index = int(x)-1
+    while switch == 1:
+        if index == "":
+            section_title('Menu')
+            for (k,v) in menu_items.items():
+                print('    [' + k + '] ' + v)
+            print('\n')
+            x = input('    Enter number to select: ')
+            index = int(x)-1
 
 
-    elif index == 0:            # Create New Password
-        section_title(menu_items['1'])
-        if is_empty(site):
-            site = input("    Enter site name: ")
-        else:
-            print("    Site: %s" % (site))
+        elif index == 0:            # Create New Password
+            section_title(menu_items['1'])
+            if is_empty(site):
+                site = input("    Enter site name: ")
+            else:
+                print("    Site: %s" % (site))
 
-        length = input("    Enter number of characters. Default is 12 : ")
-        if is_empty(length):
-            length = 12
-        complexity = input("    Include special characters?(N/y): ")
-        username = input("    Enter username: ")
-        generate(int(length), complexity, key)
-        print("    Done!  %s saved to clipboard." % (generate_password.password))
-        goback()
-        index = goback.index
-    elif index == 1:            # Browse Passcards
-        section_title(menu_items['2'])
-        site = input("    Enter site name: ")
-        browse(site, getkey.key)
-        if browse.index == 0:
-            index = browse.index
-        else:
+            length = input("    Enter number of characters. Default is 12 : ")
+            if is_empty(length):
+                length = 12
+            complexity = input("    Include special characters?(N/y): ")
+            username = input("    Enter username: ")
+            generate(int(length), complexity, key)
+            print("    Done!  %s saved to clipboard." % (generate_password.password))
             goback()
             index = goback.index
-    elif index == 2:            # Generate Random Password
-        section_title(menu_items['3'])
-        length = input("    Enter number of characters. Default is 12 : ")
-        if is_empty(length):
-            length = 12
-        complexity = input("    Include special characters?(N/y): ")
-        if is_empty(complexity):
-            complexity = "No"
-        generate_password(int(length), complexity)
-        print("    Done!  %s saved to clipboard." % (generate_password.password))
-        goback()
-        index = goback.index
-    elif index == 3:            # View JSON
-        section_title(menu_items['4'])
-        view_json()
-        goback()
-        index = goback.index
-    elif index == 4:           # Import passwords
-        section_title(menu_items['5'])
-        imp_csv()
-        goback()
-        index = goback.index
-    elif index == 5:           # Change Master Password
-        section_title(menu_items['6'])
-        change_master()
-        goback()
-        index = goback.index
-    elif index == 6:            # Quit and Exit Program
-        print("    Thanks for playing. Goodbye!\n")
-        break
+        elif index == 1:            # Browse Passcards
+            section_title(menu_items['2'])
+            site = input("    Enter site name: ")
+            browse(site, getkey.key)
+            if browse.index == 0:
+                index = browse.index
+            else:
+                goback()
+                index = goback.index
+        elif index == 2:            # Generate Random Password
+            section_title(menu_items['3'])
+            length = input("    Enter number of characters. Default is 12 : ")
+            if is_empty(length):
+                length = 12
+            complexity = input("    Include special characters?(N/y): ")
+            if is_empty(complexity):
+                complexity = "No"
+            generate_password(int(length), complexity)
+            print("    Done!  %s saved to clipboard." % (generate_password.password))
+            goback()
+            index = goback.index
+        elif index == 3:            # View JSON
+            section_title(menu_items['4'])
+            view_json()
+            goback()
+            index = goback.index
+        elif index == 4:           # Import passwords
+            section_title(menu_items['5'])
+            imp_csv()
+            goback()
+            index = goback.index
+        elif index == 5:           # Change Master Password
+            section_title(menu_items['6'])
+            change_master()
+            goback()
+            index = goback.index
+        elif index == 6:            # Quit and Exit Program
+            print("    Thanks for playing. Goodbye!\n")
+            break
 
 
