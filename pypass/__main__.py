@@ -183,7 +183,7 @@ def imp_csv():
                 if row['Pwd']:
                     encrypt_password(row['Pwd'])
                     pickle_b64(encrypt_password.encrypted)
-                    pickle_password(encrypt_password.encrypted, pid)
+                    # pickle_password(encrypt_password.encrypted, pid)
                     password = pickle_b64.p_b64
                 else:
                     password = 'NA'
@@ -315,7 +315,7 @@ def browse(site, key):
             encrypt_password(password)
             pickle_b64(encrypt_password.encrypted)
             pid = site_list[y][8]
-            pickle_password(encrypt_password.encrypted, pid)
+            # pickle_password(encrypt_password.encrypted, pid)
             create_passcard(
                 site,
                 username,
@@ -358,8 +358,8 @@ def create_master():
 def change_master():
     while True:
         # 1. Choose new password
-        new_master = input("    Create a new Master password: ")
-        new_master2 = input("    Enter new Master password again: ")
+        new_master = getpass.getpass(prompt='    Create a new Master password: ')
+        new_master2 = getpass.getpass(prompt='    Enter new Master password again: ')
         if new_master == new_master2:
             print('    Success')
             # 2. Create new key
