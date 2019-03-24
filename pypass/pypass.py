@@ -16,13 +16,23 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.fernet import Fernet
 
-
-
-# path = "/mnt/c/Users/jeff-/OneDrive/Documents/Code/"
-# TODO Remove path variable from functions
-# path is no longer needed
-# adding another change2
 path = ""
+index = ""
+switch = 0
+key = ""
+tries = 3
+site = ""
+
+menu_items = {
+    '1': 'Create New Password',
+    '2': 'Browse Passcards',
+    '3': 'Generate Random Password',
+    '4': 'View JSON',
+    '5': 'Import Passwords',
+    '6': 'Change Master Password',
+    '7': 'Quit'
+}
+
 
 def encrypt_password(password):
     f = Fernet(key)
@@ -481,27 +491,7 @@ def setup():
     with open('store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
 
-###################################################################
-# Begin
-###################################################################
-
 if __name__ == '__main__':
-
-    index = ""
-    switch = 0
-    key = ""
-    tries = 3
-    site = ""
-
-    menu_items = {
-        '1': 'Create New Password',
-        '2': 'Browse Passcards',
-        '3': 'Generate Random Password',
-        '4': 'View JSON',
-        '5': 'Import Passwords',
-        '6': 'Change Master Password',
-        '7': 'Quit'
-    }
 
     while is_empty(key):
         if os.path.exists('hash'):
@@ -594,5 +584,6 @@ if __name__ == '__main__':
         elif index == 6:            # Quit and Exit Program
             print("    Thanks for playing. Goodbye!\n")
             break
+
 
 

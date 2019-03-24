@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 requirements = ["pyperclip", "passlib", "cryptography"]
 
 setup(
-    name="SimplePass",
+    name="pypass",
     version="1.0.2",
     author="Example Author",
     author_email="jeff@moger.com",
@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'SimplePass = SimplePass:main',
+            'pypass = pypass:main',
         ],
     }
 )
