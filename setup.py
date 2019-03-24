@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'spass = spass:main',
+            'SimplePass = SimplePass:main',
         ],
     }
 )
