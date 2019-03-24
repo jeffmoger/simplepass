@@ -57,7 +57,7 @@ def generate(length, complexity, key, username, site):
     date = str(datetime.datetime.now())
     timestamp_id(date)
     encrypt_password(generate_password.password)
-    pickle_password(encrypt_password.encrypted, timestamp_id.timeid)
+    # pickle_password(encrypt_password.encrypted, timestamp_id.timeid)
     pickle_b64(encrypt_password.encrypted)
     title = ""
     note = ""
