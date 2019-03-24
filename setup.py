@@ -7,7 +7,7 @@ requirements = ["pyperclip", "passlib", "cryptography"]
 
 setup(
     name="SimplePass",
-    version="1.0.4",
+    version="1.0.5",
     author="Jeff Moger",
     author_email="jeff@moger.com",
     description="A simple password manager for the command line.",
@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'pypass = pypass:main',
+            'pypass = pypass.__main__:main',
         ],
     }
 )
