@@ -17,9 +17,9 @@ from cryptography.fernet import Fernet
 
 
 dir_ = os.path.expanduser('~') + '/SimplePass/'
-dir_import = dir_ + '/import/'
-dir_export = dir_ + '/export/'
-dir_store = dir_ + '/store/'
+dir_import = dir_ + 'import/'
+dir_export = dir_ + 'export/'
+dir_store = dir_ + 'store/'
 
 
 def encrypt_password(password):
