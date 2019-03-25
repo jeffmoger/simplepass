@@ -22,29 +22,72 @@ dir_export = dir_ + 'export/'
 dir_store = dir_ + 'store/'
 
 
+def create_master():
+    master = input("    Create a Master password: ")
+    hashpass = p_hash.hash(master)
+    fh = open(dir_ + 'hash', 'w', encoding='utf-8')
+    fh.write(hashpass)
+    fh.close()
+
+
+def getkey(master):
+    password = master.encode()
+    salt = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend())
+    key = base64.urlsafe_b64encode(kdf.derive(password))
+    getkey.key = (key)
+
+
+def timestamp_id2(date):
+    timestamp = str(date)
+    timestamp_id2.timestamp = timestamp
+    n = timestamp.translate(str.maketrans(' ', '-', string.punctuation))
+    timeid = n.replace("-", "")
+    timestamp_id2.timeid = timeid[2:16]
+
+
+def id_(date):
+    """
+    Takes string from datetime.now() and retuns 14 character unique id
+    """
+    return date.translate(
+        str.maketrans(' ', '-', string.punctuation)
+        ).replace("-", "")[2:16]
+
+
+
 def encrypt_password(password):
     f = Fernet(getkey.key)
     a = password.encode('utf-8')
     encrypt_password.encrypted = f.encrypt(a)
 
 
-def timestamp_id(date): # takes timestamp and creates the unique id for each passcard
-    timestamp = str(date)
-    timestamp_id.timestamp = timestamp
-    n = timestamp.translate(str.maketrans(' ', '-', string.punctuation))
-    timeid = n.replace("-", "")
-    timestamp_id.timeid = timeid[2:16]
+def pickle_b64(encrypted):
+    pickled_p = pickle.dumps(encrypted)
+    p_b64 = base64.b64encode(pickled_p).decode('ascii')
+    pickle_b64.p_b64 = p_b64
+
+
+def unpickle(pickled_p_b64):
+    pickled_p = base64.b64decode(pickled_p_b64)
+    encrypted = pickle.loads(pickled_p)  # encrypted = pickle.loads(pickled_p)
+    unpickle.encrypted = encrypted
+
+
+def unencrypt(encrypted, key):
+    f = Fernet(key)
+    decrypted = f.decrypt(encrypted)  # decrypted = f.decrypt(password)
+    unencrypt.decrypted = decrypted.decode()
 
 
 def pickle_password(encrypted, timeid): # pickles the password and saves to a file
     with open(dir_store + timeid, 'wb') as f:
         pickle.dump(encrypted, f)
-
-
-def pickle_b64(encrypted):
-    pickled_p = pickle.dumps(encrypted)
-    p_b64 = base64.b64encode(pickled_p).decode('ascii')
-    pickle_b64.p_b64 = p_b64
 
 
 def pickle_batch():
@@ -60,9 +103,8 @@ def pickle_batch():
 def generate(length, complexity, key, username, site):
     generate_password(length, complexity)
     date = str(datetime.datetime.now())
-    timestamp_id(date)
     encrypt_password(generate_password.password)
-    # pickle_password(encrypt_password.encrypted, timestamp_id.timeid)
+    # pickle_password(encrypt_password.encrypted, id_(date))
     pickle_b64(encrypt_password.encrypted)
     title = ""
     note = ""
@@ -71,10 +113,10 @@ def generate(length, complexity, key, username, site):
         username,
         username + '@moger.com',
         pickle_b64.p_b64,
-        timestamp_id.timestamp,
+        date,
         title,
         note,
-        timestamp_id.timeid
+        id_(date)
     )
     save_passcards(create_passcard.new_dict)
 
@@ -183,8 +225,7 @@ def imp_csv():
                 username = ""
                 email = row['Login']
                 date = str(datetime.datetime.now())
-                timestamp_id(date)
-                pid = timestamp_id.timeid
+                pid = id_(date)
                 if row['Pwd']:
                     encrypt_password(row['Pwd'])
                     pickle_b64(encrypt_password.encrypted)
@@ -192,7 +233,6 @@ def imp_csv():
                     password = pickle_b64.p_b64
                 else:
                     password = 'NA'
-                timestamp = timestamp_id.timestamp
                 title = row['Name']
                 note = ""
                 create_passcard(
@@ -200,7 +240,7 @@ def imp_csv():
                     username,
                     email,
                     password,
-                    timestamp,
+                    date,
                     title,
                     note,
                     pid
@@ -210,18 +250,6 @@ def imp_csv():
         save_import(import_list)
     else:
         print('File does not exist.')
-
-
-def unpickle(pickled_p_b64):
-    pickled_p = base64.b64decode(pickled_p_b64)
-    encrypted = pickle.loads(pickled_p)  # encrypted = pickle.loads(pickled_p)
-    unpickle.encrypted = encrypted
-
-
-def unencrypt(encrypted, key):
-    f = Fernet(key)
-    decrypted = f.decrypt(encrypted)  # decrypted = f.decrypt(password)
-    unencrypt.decrypted = decrypted.decode()
 
 
 def browse(site, key):
@@ -311,9 +339,8 @@ def browse(site, key):
             else:
                 title = site_list[y][6]
             date = str(datetime.datetime.now())
-            timestamp_id(date)
             if note2:
-                note = timestamp_id.timestamp[:16] + ': ' + \
+                note = date[:16] + ': ' + \
                     note2 + '\n*****************\n' + site_list[y][7]
             else:
                 note = site_list[y][7]
@@ -326,7 +353,7 @@ def browse(site, key):
                 username,
                 email,
                 pickle_b64.p_b64,
-                timestamp_id.timestamp,
+                date,
                 title,
                 note,
                 pid
@@ -350,14 +377,6 @@ def browse(site, key):
             print('    Record Deleted')
         else:
             pass
-
-
-def create_master():
-    master = input("    Create a Master password: ")
-    hashpass = p_hash.hash(master)
-    fh = open(dir_ + 'hash', 'w', encoding='utf-8')
-    fh.write(hashpass)
-    fh.close()
 
 
 def change_master():
@@ -409,25 +428,6 @@ def change_master():
             break
         else:
             print("    Passwords do not match. Try again.")
-
-
-def getkey(master):
-    password = master.encode()
-    salt = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend())
-    key = base64.urlsafe_b64encode(kdf.derive(password))
-    getkey.key = (key)
-
-
-def openpass(site, date):
-    with open('temp.dat', 'rb') as f:
-        new_data = pickle.load(f)
-        print(new_data)
 
 
 def view_json():
