@@ -43,46 +43,39 @@ def getkey(master):
     getkey.key = (key)
 
 
-def timestamp_id2(date):
-    timestamp = str(date)
-    timestamp_id2.timestamp = timestamp
-    n = timestamp.translate(str.maketrans(' ', '-', string.punctuation))
-    timeid = n.replace("-", "")
-    timestamp_id2.timeid = timeid[2:16]
-
-
 def id_(date):
     """
-    Takes string from datetime.now() and retuns 14 character unique id
+    Takes string from datetime.now() and retuns 14 character unique id for each passcard
     """
     return date.translate(
         str.maketrans(' ', '-', string.punctuation)
         ).replace("-", "")[2:16]
 
 
-
 def encrypt_password(password):
     f = Fernet(getkey.key)
     a = password.encode('utf-8')
-    encrypt_password.encrypted = f.encrypt(a)
+    #encrypt_password.encrypted = f.encrypt(a)
+    return f.encrypt(a)
 
 
 def pickle_b64(encrypted):
     pickled_p = pickle.dumps(encrypted)
-    p_b64 = base64.b64encode(pickled_p).decode('ascii')
-    pickle_b64.p_b64 = p_b64
+    return base64.b64encode(pickled_p).decode('ascii')
 
 
 def unpickle(pickled_p_b64):
     pickled_p = base64.b64decode(pickled_p_b64)
-    encrypted = pickle.loads(pickled_p)  # encrypted = pickle.loads(pickled_p)
-    unpickle.encrypted = encrypted
+    #encrypted = pickle.loads(pickled_p)  # encrypted = pickle.loads(pickled_p)
+    #unpickle.encrypted = encrypted
+    return pickle.loads(pickled_p)
 
 
 def unencrypt(encrypted, key):
     f = Fernet(key)
-    decrypted = f.decrypt(encrypted)  # decrypted = f.decrypt(password)
-    unencrypt.decrypted = decrypted.decode()
+    #decrypted = f.decrypt(encrypted)  # decrypted = f.decrypt(password)
+    #unencrypt.decrypted = decrypted.decode()
+    return f.decrypt(encrypted)
 
 
 def pickle_password(encrypted, timeid): # pickles the password and saves to a file
@@ -95,24 +88,21 @@ def pickle_batch():
     with open(dir_ + 'store.json', 'r') as f:  # Opens store dictionary
         store_dict = json.load(f)
     for row in store_dict['passwords']:
-        unpickle(row['password'])
-        pickle_password(unpickle.encrypted, row['pid'])
+        pickle_password(unpickle(row['password']), row['pid'])
         count += 1
 
 
 def generate(length, complexity, key, username, site):
     generate_password(length, complexity)
     date = str(datetime.datetime.now())
-    encrypt_password(generate_password.password)
     # pickle_password(encrypt_password.encrypted, id_(date))
-    pickle_b64(encrypt_password.encrypted)
     title = ""
     note = ""
     create_passcard(
         site,
         username,
         username + '@moger.com',
-        pickle_b64.p_b64,
+        pickle_b64(encrypt_password(generate_password.password)),
         date,
         title,
         note,
@@ -228,9 +218,8 @@ def imp_csv():
                 pid = id_(date)
                 if row['Pwd']:
                     encrypt_password(row['Pwd'])
-                    pickle_b64(encrypt_password.encrypted)
                     # pickle_password(encrypt_password.encrypted, pid)
-                    password = pickle_b64.p_b64
+                    password = pickle_b64(encrypt_password(generate_password.password))
                 else:
                     password = 'NA'
                 title = row['Name']
@@ -261,9 +250,7 @@ def browse(site, key):
         countid = 1
     for row in store_dict['passwords']:
         if site in row['site']:
-            unpickle(row['password'])
-            unencrypt(unpickle.encrypted, getkey.key)
-            password = unencrypt.decrypted
+            password = unencrypt(unpickle(row['password']), getkey.key)
             str_card = '\n' \
                 '    countID  : [' + str(countid) + ']\n' \
                 '    title    : ' + row['title'] + '\n' \
@@ -345,14 +332,14 @@ def browse(site, key):
             else:
                 note = site_list[y][7]
             encrypt_password(password)
-            pickle_b64(encrypt_password.encrypted)
+            
             pid = site_list[y][8]
             # pickle_password(encrypt_password.encrypted, pid)
             create_passcard(
                 site,
                 username,
                 email,
-                pickle_b64.p_b64,
+                pickle_b64(encrypt_password(generate_password.password)),
                 date,
                 title,
                 note,
@@ -402,9 +389,7 @@ def change_master():
                 store_dict = json.load(f)
             
             for row in store_dict['passwords']:
-                unpickle(row['password'])
-                unencrypt(unpickle.encrypted, getkey.key)
-                password = unencrypt.decrypted
+                password = unencrypt(unpickle(row['password']), getkey.key)
                 # 3b. Encrypt with new key
                 f = Fernet(key2)
                 a = password.encode('utf-8')
@@ -434,15 +419,6 @@ def view_json():
     with open(dir_ + 'store.json', 'r') as f:  # Opens store dictionary
         store_dict = json.load(f)
         print(json.dumps(store_dict, indent=4, sort_keys=False))
-
-
-def hidden(site):
-    if site == "__master":
-        create_master()
-    elif site == "__viewjson":
-        view_json()
-    else:
-        pass
 
 
 def section_title(option):
