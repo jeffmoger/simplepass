@@ -1,4 +1,4 @@
-from modules.simplepass import *
+from modules.simple import *
 
 
 if __name__ == '__main__':

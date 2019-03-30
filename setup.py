@@ -7,7 +7,7 @@ requirements = ["pyperclip", "passlib", "cryptography"]
 
 setup(
     name="SimplePass",
-    version="1.2.0",
+    version="1.2.1",
     author="Jeff Moger",
     author_email="jeff-simple@moger.com",
     description="A simple password manager for the command line.",
@@ -15,6 +15,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/jeffmoger/pypass",
     packages=find_packages(),
+    py_modules=["modules.simple"]
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3.7",
