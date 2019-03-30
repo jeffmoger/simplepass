@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'simple = pypass.__main__:main',
+            'simple = simple.__main__:main',
         ],
     }
 )
