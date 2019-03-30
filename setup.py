@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'simple = simple.__main__:main',
+            'simple = simplepass.__main__:main',
         ],
     }
 )
