@@ -1,7 +1,24 @@
-# pypass
+# SimplePass
 
-A command line password manager in python.
+A lightwieght password manager for the command line. 
 
-Call program on the command line with 'pypass'
+## Install
 
+*Windows*
 
+`pip install SimplePass`
+
+*Linux*
+
+`pip3 install SimplePass`
+
+## Usage
+
+`simple`
+
+## Features
+
+- Master password is hashed with a unique salt
+- Unique salts for every encrypted password
+- Lightweight storage in JSON
+- Import / Export

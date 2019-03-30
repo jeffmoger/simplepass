@@ -1,11 +1,11 @@
 import os
 import string
 import secrets
-import datetime
 import base64
 import getpass
 import pickle
 import json
+import datetime
 import csv
 from time import sleep
 
@@ -17,187 +17,27 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.fernet import Fernet
 
 
-dir_ = os.path.expanduser('~') + '/SimplePass/'
-dir_import = dir_ + 'import/'
-dir_export = dir_ + 'export/'
-dir_store = dir_ + 'store/'
-salt1 = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
-
-
-def getkey(master):
-    password = master.encode()
-    salt = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend())
-    key = base64.urlsafe_b64encode(kdf.derive(password))
-    return key
-
-
-def get_salt():
-    return os.urandom(16)
-
-
-def encrypt(key, salt, password):
-    f = Fernet(key)
-    encrypted = f.encrypt(password)
-    return encrypted
-
-
-def decrypt(key, salt, password):
-    f = Fernet(key)
-    decrypted = f.decrypt(password)
-    return decrypted
-
-
-def pickle_bytes(token):
-    p = pickle.dumps(token)
-    return base64.b64encode(p).decode('ascii')
-
-
-def unpickle_string(token):
-    p = base64.b64decode(token)
-    return pickle.loads(p)
-
-
-def lock(key, salt1, salt2, password):
-    encrypted = pickle_bytes(
-        encrypt(key, salt2, encrypt(key, salt1, password)))
-    return encrypted
-
-
-def unlock(key, salt1, salt2, token):
-    decrypted = decrypt(
-        key, salt1, decrypt(key, salt2,
-                            unpickle_string(token)))
-    return decrypted.decode()
-
-
-def create_master():
-    master = getpass.getpass(prompt="    Create a Master password: ")
-    hashpass = p_hash.hash(master)
-    fh = open(dir_ + 'hash', 'w', encoding='utf-8')
-    fh.write(hashpass)
-    fh.close()
-
-
-def id_(date):
-    """
-    Takes string from datetime.now() and retuns 14 character
-    unique id for each passcard
-    """
-    return date.translate(
-        str.maketrans(' ', '-', string.punctuation)
-        ).replace("-", "")[2:16]
-
-
-# ******************************************************
-
-# *********************************************
-
-
-def generate(length, complexity, key, username, site):
-    pw = generate_password(length, complexity)
-    pyperclip.copy(pw)
-    date = str(datetime.datetime.now())
-    title = ""
-    note = ""
-    salt2 = get_salt()
-    token = lock(key, salt1, salt2, pw.encode())
-    password = {"salt": pickle_bytes(salt2), "token": token}
-    passcard = create_passcard(
-        site,
-        username,
-        username + '@moger.com',
-        password,
-        date,
-        title,
-        note,
-        id_(date)
-    )
-    save_passcards(passcard)
-
-
-def generate_password(length, complexity):
-    alphabet = string.ascii_letters + string.digits
-    alnum = length
-    symbols = '!'+'@'+'#'+'$'+'%'+'^'+'&'+'*'
-    if complexity in ('y', 'Y', 'yes', 'Yes'):
-        alphabet = alphabet + symbols
-        alnum = length - 1
-    while True:
-        password = ''.join(secrets.choice(alphabet) for i in range(length))
-        if (any(c.islower() for c in password) and
-                any(c.isupper() for c in password) and
-                sum(c.isdigit() for c in password) >= 2 and
-                sum(c.isalnum() for c in password) == alnum):
-            break
-    return password
-
-
-def create_passcard(site, username, email, password, timestamp,
-                    title, note, pid):
-    keys = [
-        'site',
-        'username',
-        'email',
-        'password',
-        'timestamp',
-        'title',
-        'note',
-        'pid'
-    ]
-    values = [
-        site,
-        username,
-        email,
-        password,
-        timestamp,
-        title,
-        note,
-        pid
-    ]
-    new_dict = []
-    new_dict = dict(zip(keys, values))
-    return new_dict
-
-
-def save_passcards(new_dict):
-    with open(dir_ + 'store.json', 'r') as f:
-        store_dict = json.load(f)
-    mylist = []
-    passlist = store_dict['passwords']
-    saved = 0
-    for s in passlist:
-        if s['pid'] == new_dict['pid']:
-            mylist.append(new_dict)
-            saved = 1
+def directory(folder):
+    dir_ = os.path.expanduser('~') + '/SimplePass/'
+    if folder:
+        if folder == 'import':
+            d = dir_ + 'import/'
+        elif folder == 'export':
+            d = dir_ + 'export/'
         else:
-            mylist.append(s)
-    if not saved:
-        mylist.append(new_dict)
-    mydict = {"passwords": mylist}
-    with open(dir_ + 'store.json', 'w', encoding='utf-8') as f:
-        json.dump(mydict, f)
-    print('    Record Saved')
+            d = dir_
+        dir_ = d
+    return dir_
 
 
-def save_import(import_list):
-    with open(dir_ + 'store.json', 'r') as f:
-        store_dict = json.load(f)
-    mylist = []
-    passlist = store_dict['passwords']
-    for s in passlist:
-        mylist.append(s)
-    for count, s in enumerate(import_list, 1):
-        mylist.append(s)
-    mydict = {"passwords": mylist}
-    with open(dir_ + 'store.json', 'w', encoding='utf-8') as f:
-        json.dump(mydict, f)
-    print('    Complete. %d records imported.' % count)
+def salt1():
+    salt1 = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
+    return salt1
+
+
+"""
+        Import / Export
+"""
 
 
 def getfieldnames(path):
@@ -211,9 +51,63 @@ def getfieldnames(path):
         mylist.append(myitem)
 
 
+def save_import(import_list):
+    with open(directory('') + 'store.json', 'r') as f:
+        store_dict = json.load(f)
+    mylist = []
+    passlist = store_dict['passwords']
+    for s in passlist:
+        mylist.append(s)
+    for count, s in enumerate(import_list, 1):
+        mylist.append(s)
+    mydict = {"passwords": mylist}
+    with open(directory('') + 'store.json', 'w', encoding='utf-8') as f:
+        json.dump(mydict, f)
+    print('    Complete. %d records imported.' % count)
+
+
+def export(key):
+    date = str(datetime.datetime.now())[:10]
+    with open(directory('') + 'store.json', 'r') as f:
+        store_dict = json.load(f)
+
+    exportlist = store_dict['passwords']
+    header = ('id', 'title', 'site', 'username', 'email', 'password',
+              'note', 'date_modified', 'date_exported')
+    file_name = 'export-%s.csv' % date
+    file_path = os.path.join(directory('export'), file_name)
+    try:
+        os.mkdir(directory('export'))
+    except OSError:
+        pass
+    else:
+        print("Successfully created the directory %s " % directory('export'))
+    with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+        w = csv.writer(csvfile, delimiter=',',
+                       quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        c = 0
+        w.writerow(header)
+        for r in exportlist:
+            password = r['password']
+            salt2 = password['salt']
+            token = password['token']
+            pw = unlock(key, salt1(), salt2, token)
+            w.writerow([str(r['pid'])] +
+                       [r['title']] +
+                       [r['site']] +
+                       [r['username']] +
+                       [r['email']] +
+                       [pw] +
+                       [r['note']] +
+                       [r['timestamp'][:10]] +
+                       [date])
+            c += 1
+    print('%d passwords exported.' % c)
+
+
 def imp_csv(key):
     file_name = input('    Enter file name: ')
-    file_path = os.path.join(dir_import, file_name)
+    file_path = os.path.join(directory('import'), file_name)
     if os.path.exists(file_path):
         import_list = []
         with open(file_path, newline='', encoding='utf-8') as csvfile:
@@ -250,15 +144,93 @@ def imp_csv(key):
         print('File does not exist.')
 
 
-def search(list, key, value):
-    for item in list:
-        if item[key] == value:
-            return item
+"""
+        Passcard Functions
+"""
+
+
+def id_(date):
+    """
+    Takes string from datetime.now() and returns 14 character
+    unique id for each passcard
+    """
+    return date.translate(
+        str.maketrans(' ', '-', string.punctuation)
+        ).replace("-", "")[2:16]
+
+
+def generate(length, complexity, key, username, site):
+    pw = generate_password(length, complexity)
+    pyperclip.copy(pw)
+    date = str(datetime.datetime.now())
+    title = ""
+    note = ""
+    salt2 = get_salt()
+    token = lock(key, salt1(), salt2, pw.encode())
+    password = {"salt": pickle_bytes(salt2), "token": token}
+    passcard = create_passcard(
+        site,
+        username,
+        username + '@moger.com',
+        password,
+        date,
+        title,
+        note,
+        id_(date)
+    )
+    save_passcards(passcard)
+
+
+def create_passcard(site, username, email, password, timestamp,
+                    title, note, pid):
+    keys = [
+        'site',
+        'username',
+        'email',
+        'password',
+        'timestamp',
+        'title',
+        'note',
+        'pid'
+    ]
+    values = [
+        site,
+        username,
+        email,
+        password,
+        timestamp,
+        title,
+        note,
+        pid
+    ]
+    new_dict = []
+    new_dict = dict(zip(keys, values))
+    return new_dict
+
+
+def save_passcards(new_dict):
+    with open(directory('') + 'store.json', 'r') as f:
+        store_dict = json.load(f)
+    mylist = []
+    passlist = store_dict['passwords']
+    saved = 0
+    for s in passlist:
+        if s['pid'] == new_dict['pid']:
+            mylist.append(new_dict)
+            saved = 1
+        else:
+            mylist.append(s)
+    if not saved:
+        mylist.append(new_dict)
+    mydict = {"passwords": mylist}
+    with open(directory('') + 'store.json', 'w', encoding='utf-8') as f:
+        json.dump(mydict, f)
+    print('    Record Saved')
 
 
 def browse(site, key):
     browse.index = ""
-    with open(dir_ + 'store.json', 'r') as f:  # Opens store dictionary
+    with open(directory('') + 'store.json', 'r') as f:
         store_dict = json.load(f)
         site_list = []
         countID = 0
@@ -268,7 +240,7 @@ def browse(site, key):
             password = row['password']
             salt2 = password['salt']
             token = password['token']
-            pw = unlock(key, salt1, salt2, token)
+            pw = unlock(key, salt1(), salt2, token)
             row_dict = row
             row_dict['countID'] = countID
             row_dict['temp_pw'] = pw
@@ -330,7 +302,7 @@ def browse(site, key):
             if email2:
                 passcard['email'] = email2
             if password2:
-                token = lock(key, salt1,
+                token = lock(key, salt1(),
                              unpickle_string(passcard['password']['salt']),
                              password2.encode())
                 passcard['password']['token'] = token
@@ -339,7 +311,7 @@ def browse(site, key):
             if note2:
                 note = passcard['note']
                 passcard['note'] = date[:16] + ': ' + note2 + '\n' + note
-            with open(dir_ + 'store.json', 'r') as f:
+            with open(directory('') + 'store.json', 'r') as f:
                 store_dict = json.load(f)
             passlist = store_dict['passwords']
             mylist = []
@@ -353,12 +325,13 @@ def browse(site, key):
                 else:
                     mylist.append(r)
             mydict = {"passwords": mylist}
-            with open(dir_ + 'store.json', 'w', encoding='utf-8') as f:
+            with open(directory('') + 'store.json', 'w',
+                      encoding='utf-8') as f:
                 json.dump(mydict, f)
             print('    Saved')
         elif x.startswith('D'):
             y = int(x.lstrip('D'))
-            with open(dir_ + 'store.json', 'r') as f:
+            with open(directory('') + 'store.json', 'r') as f:
                 store_dict = json.load(f)
             mylist = []
             passlist = store_dict['passwords']
@@ -369,16 +342,81 @@ def browse(site, key):
                 else:
                     mylist.append(r)
             mydict = {"passwords": mylist}
-            with open(dir_ + 'store.json', 'w', encoding='utf-8') as f:
+            with open(directory('') + 'store.json',
+                      'w', encoding='utf-8') as f:
                 json.dump(mydict, f)
             print('    Record Deleted')
         else:
             pass
 
 
+"""
+            Vault Functions
+"""
+
+
+def create_master():
+    master = getpass.getpass(prompt="    Create a Master password: ")
+    hashpass = p_hash.hash(master)
+    fh = open(directory('') + 'hash', 'w', encoding='utf-8')
+    fh.write(hashpass)
+    fh.close()
+
+
+def getkey(master):
+    password = master.encode()
+    salt = b'EC6873C47AD2F3FABCCC62AF564996F3F84ECD446433DDE'
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend())
+    key = base64.urlsafe_b64encode(kdf.derive(password))
+    return key
+
+
+def get_salt():
+    return os.urandom(16)
+
+
+def encrypt(key, salt, password):
+    f = Fernet(key)
+    encrypted = f.encrypt(password)
+    return encrypted
+
+
+def decrypt(key, salt, password):
+    f = Fernet(key)
+    decrypted = f.decrypt(password)
+    return decrypted
+
+
+def pickle_bytes(token):
+    p = pickle.dumps(token)
+    return base64.b64encode(p).decode('ascii')
+
+
+def unpickle_string(token):
+    p = base64.b64decode(token)
+    return pickle.loads(p)
+
+
+def lock(key, salt1, salt2, password):
+    encrypted = pickle_bytes(
+        encrypt(key, salt2, encrypt(key, salt1, password)))
+    return encrypted
+
+
+def unlock(key, salt1, salt2, token):
+    decrypted = decrypt(
+        key, salt1, decrypt(key, salt2,
+                            unpickle_string(token)))
+    return decrypted.decode()
+
+
 def change_master(key):
     while True:
-        # 1. Choose new password
         new_master = getpass.getpass(
             prompt='    Create a new Master password: ')
         new_master2 = getpass.getpass(
@@ -386,24 +424,23 @@ def change_master(key):
         if new_master == new_master2:
             key2 = getkey(new_master)
             new_list = []
-            with open(dir_ + 'store.json', 'r') as f:  # Opens store dictionary
+            with open(directory('') + 'store.json', 'r') as f:
                 store_dict = json.load(f)
             for row in store_dict['passwords']:
                 password = row['password']
                 salt2 = unpickle_string(password['salt'])
                 old_token = password['token']
-                token = unlock(key, salt1, salt2, old_token)
+                token = unlock(key, salt1(), salt2, old_token)
                 row['password']['salt'] = pickle_bytes(salt2)
                 row['password']['token'] = lock(
-                    key2, salt1, salt2, token.encode())
+                    key2, salt1(), salt2, token.encode())
                 new_list.append(row)
             newdict = {"passwords": new_list}
-            with open(dir_ + 'store.json', 'w', encoding='utf-8') as f:
+            with open(directory('') + 'store.json', 'w',
+                      encoding='utf-8') as f:
                 json.dump(newdict, f)
-
-            # 4. Save new hash
             hashpass = p_hash.hash(new_master)
-            fh = open(dir_ + 'hash', 'w', encoding='utf-8')
+            fh = open(directory('') + 'hash', 'w', encoding='utf-8')
             fh.write(hashpass)
             fh.close()
             master = new_master
@@ -414,8 +451,36 @@ def change_master(key):
             print("    Passwords do not match. Try again.")
 
 
+def generate_password(length, complexity):
+    alphabet = string.ascii_letters + string.digits
+    alnum = length
+    symbols = '!'+'@'+'#'+'$'+'%'+'^'+'&'+'*'
+    if complexity in ('y', 'Y', 'yes', 'Yes'):
+        alphabet = alphabet + symbols
+        alnum = length - 1
+    while True:
+        password = ''.join(secrets.choice(alphabet) for i in range(length))
+        if (any(c.islower() for c in password) and
+                any(c.isupper() for c in password) and
+                sum(c.isdigit() for c in password) >= 2 and
+                sum(c.isalnum() for c in password) == alnum):
+            break
+    return password
+
+
+"""
+            Other
+"""
+
+
+def search(list, key, value):
+    for item in list:
+        if item[key] == value:
+            return item
+
+
 def view_json():
-    with open(dir_ + 'store.json', 'r') as f:  # Opens store dictionary
+    with open(directory('') + 'store.json', 'r') as f:
         store_dict = json.load(f)
         print(json.dumps(store_dict, indent=4, sort_keys=False))
 
@@ -438,16 +503,16 @@ def goback():
     if x == "m":
         goback.index = ""
     else:
-        goback.index = 6
+        goback.index = 7
 
 
 def setup():
-    print('    ************************************\n' +
-          '    Welcome to SimplePass Password Manager\n' +
-          '    ************************************\n')
+    print('    ***************************\n' +
+          '    SimplePass Password Manager\n' +
+          '    ***************************\n')
     create_master()
     mydict = {"passwords": []}
-    with open(dir_ + 'store.json', 'w', encoding='utf-8') as f:
+    with open(directory('') + 'store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
 
 
@@ -459,13 +524,13 @@ def create_folders():
     """
 
     try:
-        os.mkdir(dir_)
+        os.mkdir(directory(''))
     except OSError:
-        print("Creation of the directory %s failed" % dir_)
+        print("Creation of the directory %s failed" % directory(''))
     else:
-        print("Successfully created the directory %s " % dir_)
-        os.mkdir(dir_import)
-        os.mkdir(dir_store)
+        print("Successfully created the directory %s " % directory(''))
+        os.mkdir(directory('import'))
+        os.mkdir(directory('export'))
 
 
 def main():
@@ -478,16 +543,17 @@ def main():
         '4': 'View JSON',
         '5': 'Import Passwords',
         '6': 'Change Master Password',
-        '7': 'Quit'
+        '7': 'Export Passwords',
+        '8': 'Quit'
     }
     key = ""
     tries = 3
-    if not os.path.exists(dir_):
+    if not os.path.exists(directory('')):
         create_folders()
     while is_empty(key):
-        if os.path.exists(dir_ + 'hash'):
+        if os.path.exists(directory('') + 'hash'):
             master = getpass.getpass(prompt='    Password: ')
-            with open(dir_ + 'hash', 'r', encoding='utf-8') as f:
+            with open(directory('') + 'hash', 'r', encoding='utf-8') as f:
                 saved_hash = f.read()
             if p_hash.verify(master, saved_hash):
                 print("    Welcome. Login successful!")
@@ -503,7 +569,7 @@ def main():
                     break
         else:
             setup()
-            if os.path.exists(dir_ + 'hash'):
+            if os.path.exists(directory('') + 'hash'):
                 print('    Login to continue setup.')
             else:
                 print('    Something has gone wrong. Quitting.')
@@ -570,7 +636,12 @@ def main():
             key = change_master.key
             goback()
             index = goback.index
-        elif index == 6:            # Quit and Exit Program
+        elif index == 6:           # Export Paswords
+            section_title(menu_items['7'])
+            export(key)
+            goback()
+            index = goback.index
+        elif index == 7:            # Quit and Exit Program
             print("    Thanks for playing. Goodbye!\n")
             break
         else:
