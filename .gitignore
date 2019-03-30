@@ -110,3 +110,4 @@ venv.bak/
 /pypass/store
 /pypass/store.json
 /.vscode
+dump
