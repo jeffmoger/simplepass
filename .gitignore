@@ -104,10 +104,5 @@ venv.bak/
 .mypy_cache/
 
 # My Stuff
-/pypass/hash
-/pypass/salt
-/pypass/Import
-/pypass/store
-/pypass/store.json
-/.vscode
+.vscode
 dump
