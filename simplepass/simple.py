@@ -538,10 +538,9 @@ def view_json():
 
 
 def section_title(option):
-    title = (
-        '\n' + '    ' + option +
-        '\n' + '    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    return title
+    print(
+          '\n' + '    ' + option +
+          '\n' + '    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
 
 def is_empty(anything):

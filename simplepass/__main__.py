@@ -1,4 +1,4 @@
-from modules import simple
+import simple
 
 if __name__ == '__main__':
     if simple.get_version():
