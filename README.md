@@ -1,6 +1,6 @@
 # SimplePass
 
-A lightwieght password manager for the command line. 
+A lightweight password manager for the command line. 
 
 ## Install
 
