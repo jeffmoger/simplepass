@@ -6,15 +6,15 @@ with open("README.md", "r") as fh:
 requirements = ["pyperclip", "passlib", "cryptography"]
 
 setup(
-    name="SimplePass",
-    version="1.2.5",
+    name="simplepass",
+    version="1.2.6",
     author="Jeff Moger",
     author_email="jeff-simple@moger.com",
     description="A simple password manager for the command line.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/jeffmoger/pypass",
-    packages=find_packages(),
+    packages=["simplepass"],
     install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3.7",
