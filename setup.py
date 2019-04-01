@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-requirements = ["pyperclip", "passlib", "cryptography"]
+requirements = ["pyperclip", "passlib", "cryptography", "PyYAML"]
 
 setup(
     name="simplepass",
