@@ -10,12 +10,13 @@ import string
 import sys
 from time import sleep
 
-import pyperclip
-from passlib.hash import pbkdf2_sha256 as p_hash
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.fernet import Fernet
+from passlib.hash import pbkdf2_sha256 as p_hash
+import pyperclip
+import yaml
 
 
 def setup():
@@ -40,6 +41,14 @@ def create_folders():
     text = ('    Welcome to SimplePass\n' +
             '    Your passwords will be stored in your home\n' +
             '    directory here: %s\n' % path)
+    config_default = True
+    config_home = os.path.expanduser('~')
+    config_folder = 'SimplePass'
+    
+    config = {"install":
+              {"default": config_default,
+               "home": config_home,
+               "folder": config_folder}}
     if os.path.exists(path + filename):
         print(text)
     else:
@@ -53,7 +62,9 @@ def create_folders():
                 os.mkdir(directory('import'))
                 os.mkdir(directory('export'))
         with open(directory('') + filename, 'w', encoding='utf-8') as f:
-                json.dump(mydict, f)
+            json.dump(mydict, f)
+        with open(directory('') + "config.yml", 'w') as y:
+            yaml.dump(config, y)
         print(text)
 
 
@@ -436,9 +447,9 @@ def create_master():
     fh.write(hashpass)
     fh.close()
     print('    Generating key...')
-    sleep(3)
+    sleep(1)
     print('    Done. You can now start using SimplePass.\n')
-    sleep(3)
+    sleep(.5)
 
 
 def getkey(master):
