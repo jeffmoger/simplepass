@@ -19,15 +19,12 @@ from cryptography.fernet import Fernet
 
 
 def setup():
-    # Welcome, Instructions
-    print('    ***************************\n' +
-          '    SimplePass Password Manager\n' +
-          '    ***************************\n')
+    title = 'SimplePass Password Manager'
+    section_title(title)
+    # Select default storage location
+    create_folders()
     # Select Master Password
     create_master()
-    mydict = {"passwords": []}
-    with open(directory('') + 'store.json', 'w', encoding='utf-8') as f:
-        json.dump(mydict, f)
     # TODO Import passwords here
 
 
@@ -37,15 +34,27 @@ def create_folders():
     Ensure that Program folders are available and created in the
     users home directory.
     """
-
-    try:
-        os.mkdir(directory(''))
-    except OSError:
-        print("Creation of the directory %s failed" % directory(''))
+    filename = 'store.json'
+    path = directory('')
+    mydict = {"passwords": []}
+    text = ('    Welcome to SimplePass\n' +
+            '    Your passwords will be stored in your home\n' +
+            '    directory here: %s\n' % path)
+    if os.path.exists(path + filename):
+        print(text)
     else:
-        print("Successfully created the directory %s " % directory(''))
-        os.mkdir(directory('import'))
-        os.mkdir(directory('export'))
+        if not os.path.exists(directory('')):
+            try:
+                os.mkdir(directory(''))
+            except OSError:
+                print("    Creation of the directory %s has failed"
+                      % directory(''))
+            else:
+                os.mkdir(directory('import'))
+                os.mkdir(directory('export'))
+        with open(directory('') + filename, 'w', encoding='utf-8') as f:
+                json.dump(mydict, f)
+        print(text)
 
 
 def get_print(text):
@@ -70,7 +79,7 @@ def get_version():
 
 
 def directory(folder):
-    dir_ = os.path.expanduser('~') + '/SimplePass/'
+    dir_ = os.path.expanduser('~') + '\\SimplePass\\'
     if folder:
         if folder == 'import':
             d = dir_ + 'import/'
@@ -408,11 +417,28 @@ def browse(site, key):
 
 
 def create_master():
-    master = getpass.getpass(prompt="    Create a Master password: ")
+    text = ('    Create a secret password or phrase. SimplePass\n' +
+            '    will not be able to recover your secret if you\n' +
+            '    forget it. \n')
+    master = ""
+    print(text)
+    while not master:
+        m1 = getpass.getpass(prompt="    Create a secret: ")
+        m2 = getpass.getpass(prompt="    Enter again: ")
+        if not m1 == m2:
+            print('    Your secrets must match. Try again?')
+            sleep(1)
+        else:
+            master = m1
     hashpass = p_hash.hash(master)
+    create_master.key = getkey(master)
     fh = open(directory('') + 'hash', 'w', encoding='utf-8')
     fh.write(hashpass)
     fh.close()
+    print('    Generating key...')
+    sleep(3)
+    print('    Done. You can now start using SimplePass.\n')
+    sleep(3)
 
 
 def getkey(master):
@@ -573,8 +599,6 @@ def main():
     }
     key = ""
     tries = 3
-    if not os.path.exists(directory('')):
-        create_folders()
     while is_empty(key):
         if os.path.exists(directory('') + 'hash'):
             master = getpass.getpass(prompt='    Password: ')
@@ -594,11 +618,8 @@ def main():
                     break
         else:
             setup()
-            if os.path.exists(directory('') + 'hash'):
-                print('    Login to continue setup.')
-            else:
-                print('    Something has gone wrong. Quitting.')
-                break
+            key = create_master.key
+            switch = 1
 
     while switch == 1:
         if index == "":
