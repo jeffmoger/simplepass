@@ -10,59 +10,76 @@ import string
 import sys
 from time import sleep
 
-import pyperclip
-from passlib.hash import pbkdf2_sha256 as p_hash
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.fernet import Fernet
+from passlib.hash import pbkdf2_sha256 as p_hash
+import pyperclip
+import yaml
 
 
-def setup():
+def get_store_location():
+    config_dir = os.path.expanduser('~') + "\\.simplepass\\"
+    config_path = config_dir + "config.json"
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+        store_location = config['store']
+    else:
+        store_location = os.path.expanduser('~') + '\\SimplePass\\'
+        config_json = {"store": store_location}
+        try:
+            os.mkdir(config_dir)
+        except OSError:
+            print_error = ('    Error creating %s. Quitting.' % config_dir)
+        with open(config_dir + 'config.json', 'w', encoding='utf-8') as f:
+            json.dump(config_json, f)
+    return store_location
+
+
+def setup(path):
     title = 'SimplePass Password Manager'
     section_title(title)
-    # Select default storage location
-    create_folders()
-    # Select Master Password
-    create_master()
-    # TODO Import passwords here
+    make_folders(path)
+    welcome(path)
+    create_master(path)
 
 
-def create_folders():
+def get_cfg_dir():
+    return os.path.expanduser('~') + '\\.simplepass\\'
 
+
+def make_folders(path):
     """
     Ensure that Program folders are available and created in the
     users home directory.
     """
-    filename = 'store.json'
-    path = directory('')
-    mydict = {"passwords": []}
+    store_name = 'store.json'
+    settings_name = 'settings.yml'
+    settings_dict = {"install": {"default": True}}
+    store_dict = {"passwords": []}
+    if not os.path.exists(path):
+        try:
+            os.mkdir(path)
+        except OSError:
+            print("    Creation of the directory %s has failed" % path)
+        else:
+            os.mkdir(path + 'export')
+            os.mkdir(path + 'import')
+    if not os.path.exists(path + store_name):
+        with open(path + store_name, 'w', encoding='utf-8') as f:
+            json.dump(store_dict, f)
+    if not os.path.exists(path + settings_name):
+        with open(path + settings_name, 'w') as y:
+            yaml.dump(settings_dict, y)
+
+
+def welcome(path):
     text = ('    Welcome to SimplePass\n' +
             '    Your passwords will be stored in your home\n' +
             '    directory here: %s\n' % path)
-    if os.path.exists(path + filename):
-        print(text)
-    else:
-        if not os.path.exists(directory('')):
-            try:
-                os.mkdir(directory(''))
-            except OSError:
-                print("    Creation of the directory %s has failed"
-                      % directory(''))
-            else:
-                os.mkdir(directory('import'))
-                os.mkdir(directory('export'))
-        with open(directory('') + filename, 'w', encoding='utf-8') as f:
-                json.dump(mydict, f)
-        print(text)
-
-
-def get_print(text):
-    get_version()
-    if check:
-        print(text)
-    else:
-        pass
+    print(text)
 
 
 def get_user():
@@ -112,8 +129,8 @@ def getfieldnames(path):
         mylist.append(myitem)
 
 
-def save_import(import_list):
-    with open(directory('') + 'store.json', 'r') as f:
+def save_import(import_list, path):
+    with open(path + 'store.json', 'r') as f:
         store_dict = json.load(f)
     mylist = []
     passlist = store_dict['passwords']
@@ -122,27 +139,27 @@ def save_import(import_list):
     for count, s in enumerate(import_list, 1):
         mylist.append(s)
     mydict = {"passwords": mylist}
-    with open(directory('') + 'store.json', 'w', encoding='utf-8') as f:
+    with open(path + 'store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
     print('    Complete. %d records imported.' % count)
 
 
-def export(key):
+def export(key, path):
     date = str(datetime.datetime.now())[:10]
-    with open(directory('') + 'store.json', 'r') as f:
+    with open(path + 'store.json', 'r') as f:
         store_dict = json.load(f)
 
     exportlist = store_dict['passwords']
     header = ('id', 'title', 'site', 'username', 'email', 'password',
               'note', 'date_modified', 'date_exported')
     file_name = 'export-%s.csv' % date
-    file_path = os.path.join(directory('export'), file_name)
+    file_path = os.path.join(path + 'export', file_name)
     try:
         os.mkdir(directory('export'))
     except OSError:
         pass
     else:
-        print("Successfully created the directory %s " % directory('export'))
+        print("Successfully created the directory %s " % (path + 'export'))
     with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
         w = csv.writer(csvfile, delimiter=',',
                        quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -166,9 +183,9 @@ def export(key):
     print('%d passwords exported.' % c)
 
 
-def imp_csv(key):
+def imp_csv(key, path):
     file_name = input('    Enter file name: ')
-    file_path = os.path.join(directory('import'), file_name)
+    file_path = os.path.join(path + 'import', file_name)
     if os.path.exists(file_path):
         import_list = []
         with open(file_path, newline='', encoding='utf-8') as csvfile:
@@ -239,7 +256,7 @@ def generate(length, complexity, key, username, site):
         note,
         id_(date)
     )
-    save_passcards(passcard)
+    save_passcards(passcard, get_store_location())
 
 
 def create_passcard(site, username, email, password, timestamp,
@@ -269,8 +286,8 @@ def create_passcard(site, username, email, password, timestamp,
     return new_dict
 
 
-def save_passcards(new_dict):
-    with open(directory('') + 'store.json', 'r') as f:
+def save_passcards(new_dict, path):
+    with open(path + 'store.json', 'r') as f:
         store_dict = json.load(f)
     mylist = []
     passlist = store_dict['passwords']
@@ -284,14 +301,14 @@ def save_passcards(new_dict):
     if not saved:
         mylist.append(new_dict)
     mydict = {"passwords": mylist}
-    with open(directory('') + 'store.json', 'w', encoding='utf-8') as f:
+    with open(path + 'store.json', 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
     print('    Record Saved')
 
 
-def browse(site, key):
+def browse(site, key, path):
     browse.index = ""
-    with open(directory('') + 'store.json', 'r') as f:
+    with open(path + 'store.json', 'r') as f:
         store_dict = json.load(f)
         site_list = []
         countID = 0
@@ -386,13 +403,13 @@ def browse(site, key):
                 else:
                     mylist.append(r)
             mydict = {"passwords": mylist}
-            with open(directory('') + 'store.json', 'w',
+            with open(path + 'store.json', 'w',
                       encoding='utf-8') as f:
                 json.dump(mydict, f)
             print('    Saved')
         elif x.startswith('D'):
             y = int(x.lstrip('D'))
-            with open(directory('') + 'store.json', 'r') as f:
+            with open(path + 'store.json', 'r') as f:
                 store_dict = json.load(f)
             mylist = []
             passlist = store_dict['passwords']
@@ -403,7 +420,7 @@ def browse(site, key):
                 else:
                     mylist.append(r)
             mydict = {"passwords": mylist}
-            with open(directory('') + 'store.json',
+            with open(path + 'store.json',
                       'w', encoding='utf-8') as f:
                 json.dump(mydict, f)
             print('    Record Deleted')
@@ -416,7 +433,7 @@ def browse(site, key):
 """
 
 
-def create_master():
+def create_master(path):
     text = ('    Create a secret password or phrase. SimplePass\n' +
             '    will not be able to recover your secret if you\n' +
             '    forget it. \n')
@@ -432,13 +449,13 @@ def create_master():
             master = m1
     hashpass = p_hash.hash(master)
     create_master.key = getkey(master)
-    fh = open(directory('') + 'hash', 'w', encoding='utf-8')
+    fh = open(path + 'hash', 'w', encoding='utf-8')
     fh.write(hashpass)
     fh.close()
     print('    Generating key...')
-    sleep(3)
+    sleep(1)
     print('    Done. You can now start using SimplePass.\n')
-    sleep(3)
+    sleep(.5)
 
 
 def getkey(master):
@@ -493,7 +510,7 @@ def unlock(key, salt1, salt2, token):
     return decrypted.decode()
 
 
-def change_master(key):
+def change_master(key, path):
     while True:
         new_master = getpass.getpass(
             prompt='    Create a new Master password: ')
@@ -502,7 +519,7 @@ def change_master(key):
         if new_master == new_master2:
             key2 = getkey(new_master)
             new_list = []
-            with open(directory('') + 'store.json', 'r') as f:
+            with open(path + 'store.json', 'r') as f:
                 store_dict = json.load(f)
             for row in store_dict['passwords']:
                 password = row['password']
@@ -514,11 +531,11 @@ def change_master(key):
                     key2, salt1(), salt2, token.encode())
                 new_list.append(row)
             newdict = {"passwords": new_list}
-            with open(directory('') + 'store.json', 'w',
+            with open(path + 'store.json', 'w',
                       encoding='utf-8') as f:
                 json.dump(newdict, f)
             hashpass = p_hash.hash(new_master)
-            fh = open(directory('') + 'hash', 'w', encoding='utf-8')
+            fh = open(path + 'hash', 'w', encoding='utf-8')
             fh.write(hashpass)
             fh.close()
             master = new_master
@@ -557,8 +574,8 @@ def search(list, key, value):
             return item
 
 
-def view_json():
-    with open(directory('') + 'store.json', 'r') as f:
+def view_json(path):
+    with open(path + 'store.json', 'r') as f:
         store_dict = json.load(f)
         print(json.dumps(store_dict, indent=4, sort_keys=False))
 
@@ -599,10 +616,12 @@ def main():
     }
     key = ""
     tries = 3
+    path = get_store_location()
+
     while is_empty(key):
-        if os.path.exists(directory('') + 'hash'):
+        if os.path.exists(path + 'hash'):
             master = getpass.getpass(prompt='    Password: ')
-            with open(directory('') + 'hash', 'r', encoding='utf-8') as f:
+            with open(path + 'hash', 'r', encoding='utf-8') as f:
                 saved_hash = f.read()
             if p_hash.verify(master, saved_hash):
                 print("    Welcome. Login successful!")
@@ -617,7 +636,7 @@ def main():
                     print("    Password failed. Good-bye.")
                     break
         else:
-            setup()
+            setup(path)
             key = create_master.key
             switch = 1
 
@@ -648,7 +667,7 @@ def main():
         elif index == 1:            # Browse Passcards
             section_title(menu_items['2'])
             site = input("    Enter site name: ")
-            browse(site, key)
+            browse(site, key, path)
             if browse.index == 0:
                 index = browse.index
             else:
@@ -668,23 +687,23 @@ def main():
             index = goback.index
         elif index == 3:            # View JSON
             section_title(menu_items['4'])
-            view_json()
+            view_json(path)
             goback()
             index = goback.index
         elif index == 4:           # Import passwords
             section_title(menu_items['5'])
-            imp_csv(key)
+            imp_csv(key, path)
             goback()
             index = goback.index
         elif index == 5:           # Change Master Password
             section_title(menu_items['6'])
-            change_master(key)
+            change_master(key, path)
             key = change_master.key
             goback()
             index = goback.index
         elif index == 6:           # Export Paswords
             section_title(menu_items['7'])
-            export(key)
+            export(key, path)
             goback()
             index = goback.index
         elif index == 7:            # Quit and Exit Program
