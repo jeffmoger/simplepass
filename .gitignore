@@ -106,5 +106,4 @@ venv.bak/
 # My Stuff
 .vscode
 dump
-test.py
-config.yaml
+build_info.txt
