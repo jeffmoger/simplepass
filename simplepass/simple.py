@@ -38,6 +38,17 @@ def get_store_location():
     return store_location
 
 
+def get_master(path):
+    if os.path.exists(path + 'settings.yml'):
+        with open(path + 'settings.yml', 'r') as y:
+            settings = yaml.safe_load(y)
+        try:
+            master = settings['master']
+        except OSError:
+            master = ""
+    return master
+
+
 def setup(path):
     title = 'SimplePass Password Manager'
     section_title(title)
@@ -599,7 +610,7 @@ def goback():
         goback.index = ""
     else:
         goback.index = 7
-
+    
 
 def main():
     index = ""
@@ -620,7 +631,9 @@ def main():
 
     while is_empty(key):
         if os.path.exists(path + 'hash'):
-            master = getpass.getpass(prompt='    Password: ')
+            master = get_master(path)
+            if not master:
+                master = getpass.getpass(prompt='    Password: ')
             with open(path + 'hash', 'r', encoding='utf-8') as f:
                 saved_hash = f.read()
             if p_hash.verify(master, saved_hash):
