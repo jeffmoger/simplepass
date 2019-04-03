@@ -39,6 +39,7 @@ def get_store_location():
 
 
 def get_master(path):
+    master = ""
     if os.path.exists(path + 'settings.yml'):
         with open(path + 'settings.yml', 'r') as y:
             settings = yaml.safe_load(y)
