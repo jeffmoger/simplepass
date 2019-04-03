@@ -20,14 +20,14 @@ import yaml
 
 
 def get_store_location():
-    config_dir = os.path.expanduser('~') + "\\.simplepass\\"
-    config_path = config_dir + "config.json"
+    config_dir = os.path.join(os.path.expanduser('~'), "tt")
+    config_path = os.path.join(config_dir, "config.json")
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
             config = json.load(f)
         store_location = config['store']
     else:
-        store_location = os.path.expanduser('~') + '\\SimplePass\\'
+        store_location = os.path.join(os.path.expanduser('~'), "SimplePass")
         config_json = {"store": store_location}
         try:
             os.mkdir(config_dir)
@@ -59,7 +59,7 @@ def setup(path):
 
 
 def get_cfg_dir():
-    return os.path.expanduser('~') + '\\.simplepass\\'
+    return os.path.join(os.path.expanduser('~'), ".simplepass")
 
 
 def make_folders(path):
@@ -77,8 +77,8 @@ def make_folders(path):
         except OSError:
             print("    Creation of the directory %s has failed" % path)
         else:
-            os.mkdir(path + 'export')
-            os.mkdir(path + 'import')
+            os.mkdir(os.path.join(path, "export"))
+            os.mkdir(os.path.join(path, "import"))
     if not os.path.exists(path + store_name):
         with open(path + store_name, 'w', encoding='utf-8') as f:
             json.dump(store_dict, f)
@@ -108,7 +108,7 @@ def get_version():
 
 
 def directory(folder):
-    dir_ = os.path.expanduser('~') + '\\SimplePass\\'
+    dir_ = os.path.join(os.path.expanduser('~'), "SimplePass")
     if folder:
         if folder == 'import':
             d = dir_ + 'import/'
