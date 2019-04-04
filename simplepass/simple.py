@@ -20,7 +20,7 @@ import yaml
 
 
 def get_store_location():
-    config_dir = os.path.join(os.path.expanduser('~'), "tt")
+    config_dir = os.path.join(os.path.expanduser('~'), ".simplepass")
     config_path = os.path.join(config_dir, "config.json")
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
@@ -33,20 +33,19 @@ def get_store_location():
             os.mkdir(config_dir)
         except OSError:
             print_error = ('    Error creating %s. Quitting.' % config_dir)
-        with open(config_dir + 'config.json', 'w', encoding='utf-8') as f:
+        with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(config_json, f)
     return store_location
 
 
 def get_master(path):
     master = ""
-    if os.path.exists(path + 'settings.yml'):
-        with open(path + 'settings.yml', 'r') as y:
+    file_path = os.path.join(path, 'settings.yml')
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as y:
             settings = yaml.safe_load(y)
-        try:
+        if 'master' in settings:
             master = settings['master']
-        except OSError:
-            master = ""
     return master
 
 
@@ -71,6 +70,7 @@ def make_folders(path):
     settings_name = 'settings.yml'
     settings_dict = {"install": {"default": True}}
     store_dict = {"passwords": []}
+    store_path = os.path.join(path, store_name)
     if not os.path.exists(path):
         try:
             os.mkdir(path)
@@ -79,11 +79,11 @@ def make_folders(path):
         else:
             os.mkdir(os.path.join(path, "export"))
             os.mkdir(os.path.join(path, "import"))
-    if not os.path.exists(path + store_name):
-        with open(path + store_name, 'w', encoding='utf-8') as f:
+    if not os.path.exists(store_path):
+        with open(store_path, 'w', encoding='utf-8') as f:
             json.dump(store_dict, f)
-    if not os.path.exists(path + settings_name):
-        with open(path + settings_name, 'w') as y:
+    if not os.path.exists(os.path.join(path, settings_name)):
+        with open(os.path.join(path, settings_name), 'w') as y:
             yaml.dump(settings_dict, y)
 
 
@@ -142,7 +142,8 @@ def getfieldnames(path):
 
 
 def save_import(import_list, path):
-    with open(path + 'store.json', 'r') as f:
+    store_path = os.path.join(path, 'store.json')
+    with open(store_path, 'r') as f:
         store_dict = json.load(f)
     mylist = []
     passlist = store_dict['passwords']
@@ -151,14 +152,15 @@ def save_import(import_list, path):
     for count, s in enumerate(import_list, 1):
         mylist.append(s)
     mydict = {"passwords": mylist}
-    with open(path + 'store.json', 'w', encoding='utf-8') as f:
+    with open(store_path, 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
     print('    Complete. %d records imported.' % count)
 
 
 def export(key, path):
+    store_path = os.path.join(path, 'store.json')
     date = str(datetime.datetime.now())[:10]
-    with open(path + 'store.json', 'r') as f:
+    with open(store_path, 'r') as f:
         store_dict = json.load(f)
 
     exportlist = store_dict['passwords']
@@ -299,7 +301,8 @@ def create_passcard(site, username, email, password, timestamp,
 
 
 def save_passcards(new_dict, path):
-    with open(path + 'store.json', 'r') as f:
+    store_path = os.path.join(path, 'store.json')
+    with open(store_path, 'r') as f:
         store_dict = json.load(f)
     mylist = []
     passlist = store_dict['passwords']
@@ -313,14 +316,15 @@ def save_passcards(new_dict, path):
     if not saved:
         mylist.append(new_dict)
     mydict = {"passwords": mylist}
-    with open(path + 'store.json', 'w', encoding='utf-8') as f:
+    with open(store_path, 'w', encoding='utf-8') as f:
         json.dump(mydict, f)
     print('    Record Saved')
 
 
 def browse(site, key, path):
     browse.index = ""
-    with open(path + 'store.json', 'r') as f:
+    store_path = os.path.join(path, 'store.json')
+    with open(store_path, 'r') as f:
         store_dict = json.load(f)
         site_list = []
         countID = 0
@@ -415,13 +419,13 @@ def browse(site, key, path):
                 else:
                     mylist.append(r)
             mydict = {"passwords": mylist}
-            with open(path + 'store.json', 'w',
+            with open(store_path, 'w',
                       encoding='utf-8') as f:
                 json.dump(mydict, f)
             print('    Saved')
         elif x.startswith('D'):
             y = int(x.lstrip('D'))
-            with open(path + 'store.json', 'r') as f:
+            with open(store_path, 'r') as f:
                 store_dict = json.load(f)
             mylist = []
             passlist = store_dict['passwords']
@@ -432,8 +436,7 @@ def browse(site, key, path):
                 else:
                     mylist.append(r)
             mydict = {"passwords": mylist}
-            with open(path + 'store.json',
-                      'w', encoding='utf-8') as f:
+            with open(store_path, 'w', encoding='utf-8') as f:
                 json.dump(mydict, f)
             print('    Record Deleted')
         else:
@@ -450,6 +453,7 @@ def create_master(path):
             '    will not be able to recover your secret if you\n' +
             '    forget it. \n')
     master = ""
+    path_hash = os.path.join(path, 'hash')
     print(text)
     while not master:
         m1 = getpass.getpass(prompt="    Create a secret: ")
@@ -461,7 +465,7 @@ def create_master(path):
             master = m1
     hashpass = p_hash.hash(master)
     create_master.key = getkey(master)
-    fh = open(path + 'hash', 'w', encoding='utf-8')
+    fh = open(path_hash, 'w', encoding='utf-8')
     fh.write(hashpass)
     fh.close()
     print('    Generating key...')
@@ -523,6 +527,7 @@ def unlock(key, salt1, salt2, token):
 
 
 def change_master(key, path):
+    store_path = os.path.join(path, 'store.json')
     while True:
         new_master = getpass.getpass(
             prompt='    Create a new Master password: ')
@@ -531,7 +536,7 @@ def change_master(key, path):
         if new_master == new_master2:
             key2 = getkey(new_master)
             new_list = []
-            with open(path + 'store.json', 'r') as f:
+            with open(store_path, 'r') as f:
                 store_dict = json.load(f)
             for row in store_dict['passwords']:
                 password = row['password']
@@ -543,8 +548,7 @@ def change_master(key, path):
                     key2, salt1(), salt2, token.encode())
                 new_list.append(row)
             newdict = {"passwords": new_list}
-            with open(path + 'store.json', 'w',
-                      encoding='utf-8') as f:
+            with open(store_path, 'w', encoding='utf-8') as f:
                 json.dump(newdict, f)
             hashpass = p_hash.hash(new_master)
             fh = open(path + 'hash', 'w', encoding='utf-8')
@@ -587,7 +591,8 @@ def search(list, key, value):
 
 
 def view_json(path):
-    with open(path + 'store.json', 'r') as f:
+    store_path = os.path.join(path, 'store.json')
+    with open(store_path, 'r') as f:
         store_dict = json.load(f)
         print(json.dumps(store_dict, indent=4, sort_keys=False))
 
@@ -611,7 +616,7 @@ def goback():
         goback.index = ""
     else:
         goback.index = 7
-    
+
 
 def main():
     index = ""
@@ -631,11 +636,12 @@ def main():
     path = get_store_location()
 
     while is_empty(key):
-        if os.path.exists(path + 'hash'):
+        hash_path = os.path.join(path, 'hash')
+        if os.path.exists(hash_path):
             master = get_master(path)
             if not master:
                 master = getpass.getpass(prompt='    Password: ')
-            with open(path + 'hash', 'r', encoding='utf-8') as f:
+            with open(hash_path, 'r', encoding='utf-8') as f:
                 saved_hash = f.read()
             if p_hash.verify(master, saved_hash):
                 print("    Welcome. Login successful!")
