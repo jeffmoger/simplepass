@@ -125,11 +125,6 @@ def salt1():
     return salt1
 
 
-"""
-        Import / Export
-"""
-
-
 def getfieldnames(path):
     with open(path, newline='', encoding='utf-8') as f:
         csv_header = csv.reader(f)
@@ -167,13 +162,15 @@ def export(key, path):
     header = ('id', 'title', 'site', 'username', 'email', 'password',
               'note', 'date_modified', 'date_exported')
     file_name = 'export-%s.csv' % date
-    file_path = os.path.join(path + 'export', file_name)
-    try:
-        os.mkdir(directory('export'))
-    except OSError:
-        pass
-    else:
-        print("Successfully created the directory %s " % (path + 'export'))
+    export_path = os.path.join(path, 'export')
+    file_path = os.path.join(export_path, file_name)
+    if not os.path.exists(export_path):
+        try:
+            os.mkdir(export_path)
+        except OSError:
+            print("    Creation of the directory %s has failed" % export_path)
+        else:
+            print("Successfully created the directory %s " % export_path)
     with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
         w = csv.writer(csvfile, delimiter=',',
                        quotechar='"', quoting=csv.QUOTE_MINIMAL)
