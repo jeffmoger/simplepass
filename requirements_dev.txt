@@ -2,4 +2,4 @@ cryptography==2.6.1
 passlib==1.7.1
 pyperclip==1.7.0
 twine==1.13.0
-PyYAML==5.1
+PyYAML==5.4
